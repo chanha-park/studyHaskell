@@ -34,6 +34,9 @@ myAnd = myFoldr (&&) True
 myOr :: [Bool] -> Bool
 myOr = myFoldr (||) False
 
+myXor :: [Bool] -> Bool
+myXor = myFoldr (/=) False
+
 myAny :: (a -> Bool) -> [a] -> Bool
 myAny fn = myOr . map fn
 
