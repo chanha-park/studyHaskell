@@ -18,3 +18,24 @@ myFilter fn [] = []
 myFilter fn (x : xs)
   | fn x = x : (myFilter fn xs)
   | otherwise = myFilter fn xs
+
+myLength :: [a] -> Int
+myLength = myFoldr (\x y -> 1 + y) 0
+
+mySum :: Num a => [a] -> a
+mySum = myFoldr (+) 0
+
+myProduct :: Num a => [a] -> a
+myProduct = myFoldr (*) 1
+
+myAnd :: [Bool] -> Bool
+myAnd = myFoldr (&&) True
+
+myOr :: [Bool] -> Bool
+myOr = myFoldr (||) False
+
+myAny :: (a -> Bool) -> [a] -> Bool
+myAny fn = myOr . map fn
+
+myAll :: (a -> Bool) -> [a] -> Bool
+myAll fn = myAnd . map fn
