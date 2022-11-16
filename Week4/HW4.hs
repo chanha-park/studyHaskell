@@ -25,19 +25,33 @@ data Tree a = Leaf
             | Node Integer (Tree a) a (Tree a)
             deriving (Show, Eq)
 
--- XXX
--- foldTree :: [a] -> Tree a
--- foldTree [] = Leaf
-
+foldTree :: [a] -> Tree a
+foldTree = foldr insertTree Leaf
+  where
+    insertTree :: a -> Tree a -> Tree a
+    insertTree x Leaf = Node 0 Leaf x Leaf
+    insertTree x (Node h l val r)
+      | getHeight l < getHeight r = Node h (insertTree x l) val r
+      | getHeight l > getHeight r = Node h l val (insertTree x r)
+      | otherwise = Node (1 + getHeight l') l' val r
+      where l' = insertTree x l
+    getHeight :: Tree a -> Integer
+    getHeight Leaf = -1
+    getHeight (Node h _ _ _) = h
 
 xor :: [Bool] -> Bool
 xor = foldr (/=) False
 
 -- map using fold
--- map' :: (a -> b) -> [a] -> [b]
+map' :: (a -> b) -> [a] -> [b]
+map' fn = foldr (\x xs -> fn x : xs) []
 
--- myFoldl using foldr
--- myFoldl :: (a -> b -> a) -> a -> [b] -> a
+-- myFoldl using foldr....????
+myFoldl :: (a -> b -> a) -> a -> [b] -> a
+myFoldl fn acc xs = (foldr gn id xs) acc
+  where
+    gn x g z = g (fn z x)
+
 
 -- finding primes
 -- sieveSundaram :: Integer -> [Integer]
