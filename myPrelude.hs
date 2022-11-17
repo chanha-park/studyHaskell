@@ -1,26 +1,35 @@
+{-# OPTIONS_GHC -Wall -Werror -Wextra #-}
 -- custom Prelude Function implementation
 -- foldr', foldl' ???
 
 myFoldr :: (a -> b -> b ) -> b -> [a] -> b
-myFoldr fn acc [] = acc
+myFoldr _ acc [] = acc
 myFoldr fn acc (x : xs) = fn x (myFoldr fn acc xs)
 
 myFoldl :: (b -> a -> b ) -> b -> [a] -> b
-myFoldl fn acc [] = acc
+myFoldl _ acc [] = acc
 myFoldl fn acc (x : xs) = myFoldl fn (fn acc x) xs
 
 myMap :: (a -> b) -> [a] -> [b]
-myMap fn [] = []
+myMap _ [] = []
 myMap fn (x : xs) = (fn x) : (myMap fn xs)
 
 myFilter :: (a -> Bool) -> [a] -> [a]
-myFilter fn [] = []
+myFilter _ [] = []
 myFilter fn (x : xs)
   | fn x = x : (myFilter fn xs)
   | otherwise = myFilter fn xs
 
+myConcat :: [[a]] -> [a]
+myConcat = myFoldr (++) []
+
+myZip :: [a] -> [b] -> [(a, b)]
+myZip [] _ = []
+myZip _ [] = []
+myZip (x : xs) (y : ys) = (x, y) : myZip xs ys
+
 myLength :: [a] -> Int
-myLength = myFoldr (\x y -> 1 + y) 0
+myLength = myFoldr (\_ y -> 1 + y) 0
 
 mySum :: Num a => [a] -> a
 mySum = myFoldr (+) 0
