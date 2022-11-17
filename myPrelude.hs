@@ -2,6 +2,8 @@
 -- custom Prelude Function implementation
 -- foldr', foldl' ???
 
+module MyPrelude where
+
 myFoldr :: (a -> b -> b ) -> b -> [a] -> b
 myFoldr _ acc [] = acc
 myFoldr fn acc (x : xs) = fn x (myFoldr fn acc xs)
