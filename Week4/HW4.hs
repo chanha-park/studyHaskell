@@ -46,13 +46,19 @@ xor = foldr (/=) False
 map' :: (a -> b) -> [a] -> [b]
 map' fn = foldr (\x xs -> fn x : xs) []
 
--- myFoldl using foldr....????
-myFoldl :: (a -> b -> a) -> a -> [b] -> a
-myFoldl fn acc xs = (foldr gn id xs) acc
-  where
-    gn x g z = g (fn z x)
+-- myFoldl using foldr
+myFoldl :: forall a b. (a -> b -> a) -> a -> [b] -> a
+myFoldl fn acc xs = (foldr (\x g -> \y -> g (fn y x)) id xs) acc
+-- myFoldl fn acc xs = (foldr (\x g y -> g (fn y x)) id xs) acc
+-- myFoldl fn acc xs = (foldr fn' id xs) acc
+--   where
+--     fn' :: b -> (a -> a) -> (a -> a)
+--     fn' x g = \y -> g (fn y x)
 
 
 -- finding primes
--- sieveSundaram :: Integer -> [Integer]
-
+sieveSundaram :: Integer -> [Integer]
+sieveSundaram  n = map (\x -> 2 * x + 1) (filter (\x -> (notElem x arrRm)) [1..n])
+  where
+    arrRm :: [Integer]
+    arrRm = [i + j + 2 * i * j | i <- [1..n], j <- [i..n], i + j + 2 * i * j <= n]
