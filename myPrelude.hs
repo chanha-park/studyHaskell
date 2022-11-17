@@ -42,3 +42,8 @@ myAny fn = myOr . map fn
 
 myAll :: (a -> Bool) -> [a] -> Bool
 myAll fn = myAnd . map fn
+
+-- naive qsort implementation
+myQsort :: Ord a => [a] -> [a]
+myQsort [] = []
+myQsort (x : xs) = (myQsort [y | y <- xs, y < x]) ++ [x] ++ myQsort [z | z <- xs, z >= x]
