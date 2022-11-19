@@ -1,18 +1,22 @@
 {-# OPTIONS_GHC -Wall -Werror -Wextra #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 import ExprT
 import Parser (parseExp)
 
+-- Exercise 1
 eval :: ExprT -> Integer
 eval (Lit a) = a
 eval (Add a b) = eval a + eval b
 eval (Mul a b) = eval a * eval b
 
+-- Exercise 2
 evalStr :: String -> Maybe Integer
 evalStr = (\x -> case x of
                   Just n -> Just (eval n)
                   _ -> Nothing) . (parseExp Lit Add Mul)
 
+-- Exercise 3
 class Expr a where
   lit :: Integer -> a
   add :: a -> a -> a
@@ -23,6 +27,10 @@ instance Expr ExprT where
   add x y = Add x y
   mul x y = Mul x y
 
+reify :: ExprT -> ExprT
+reify = id
+
+-- Exercise 4
 instance Expr Integer where
   lit = id
   add = (+)
@@ -49,9 +57,6 @@ newtype MinMax = MinMax Integer
 newtype Mod7 = Mod7 Integer
     deriving (Eq, Show)
 
-reify :: ExprT -> ExprT
-reify = id
-
 -- testExp :: Expr a => Maybe a
 -- testExp = parseExp lit add mul "(3 * -4) + 5"
 
@@ -59,6 +64,3 @@ reify = id
 -- testBool = testExp :: Maybe Bool
 -- testMM = testExp :: Maybe MinMax
 -- testSat = testExp :: Maybe Mod7
-
-
-
