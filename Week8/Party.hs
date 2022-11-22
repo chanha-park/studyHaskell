@@ -28,21 +28,16 @@ moreFun = max
 --    }
 
 treeFold :: (a -> [b] -> b) -> Tree a -> b
-treeFold f x@(Node {subForest = []}) = f (rootLabel x) []
-treeFold f x = f (rootLabel x) (map (treeFold f) (subForest x))
+treeFold f (Node a b) = f a (fmap (treeFold f) b)
 
 -- Exercise 3
 nextLevel :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
 nextLevel emp [] = (GL [emp] (empFun emp), GL [] 0)
-nextLevel emp xs = (maxWith, maxWithOut)
-  where
-    maxWith = glCons emp (maximum [snd x | x <- xs])
-    maxWithOut = maximum [fst x | x <- xs]
+nextLevel emp xs = (glCons emp $ foldMap snd xs, foldMap fst xs)
 
 -- Exercise 4
 maxFun :: Tree Employee -> GuestList
-maxFun x = max (fst tmp) (snd tmp)
-  where tmp = treeFold nextLevel x
+maxFun = uncurry moreFun . treeFold nextLevel
 
 -- Exercise 5
 main :: IO ()
