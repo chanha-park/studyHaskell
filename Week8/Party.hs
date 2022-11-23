@@ -32,7 +32,6 @@ treeFold f (Node a b) = f a (fmap (treeFold f) b)
 
 -- Exercise 3
 nextLevel :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
-nextLevel emp [] = (GL [emp] (empFun emp), GL [] 0)
 nextLevel emp xs = (glCons emp $ foldMap snd xs, foldMap fst xs)
 
 -- Exercise 4
