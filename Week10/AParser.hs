@@ -67,8 +67,14 @@ second f x = (fst x, f . snd $ x)
 
 instance Functor Parser where
   fmap f x = Parser $ fmap (first f) . runParser x
+  -- fmap f x = Parser (fmap (first f) . runParser x)
+  -- fmap f x = Parser (fmap (first f) . (runParser x))
+  -- fmap f (Parser fn) = Parser (fmap (first f) . fn)
+  -- fmap f (Parser fn) = Parser (\x -> fmap (first f) . fn $ x)
+  -- fmap f (Parser fn) = Parser (\x -> (fmap (first f)) (fn x))
+  -- fmap f (Parser fn) = Parser (\x -> fmap (first f) (fn x))
 
--- instance Applicative Parser where
---   pure x = Parser $ \y -> Just (x, y)
---   p1 <*> p2 = Parser (fmap runParser p1 $ p2)
+instance Applicative Parser where
+  pure x = Parser $ \y -> Just (x, y)
+  -- (<*>) (Parser fn1) (Parser fn2) = Parser $ (\x -> (fn1 . fn2 . pure) x)
 
