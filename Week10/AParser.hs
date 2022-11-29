@@ -4,15 +4,14 @@
 
 module AParser where
 
-import           Control.Applicative
-
-import           Data.Char
+import Control.Applicative
+import Data.Char
 
 -- A parser for a value of type a is a function which takes a String
 -- represnting the input to be parsed, and succeeds or fails; if it
 -- succeeds, it returns the parsed value along with the remainder of
 -- the input.
-newtype Parser a = Parser { runParser :: String -> Maybe (a, String) }
+newtype Parser a = Parser {runParser :: String -> Maybe (a, String)}
 
 -- For example, 'satisfy' takes a predicate on Char, and constructs a
 -- parser which succeeds only if it sees a Char that satisfies the
@@ -21,12 +20,12 @@ newtype Parser a = Parser { runParser :: String -> Maybe (a, String) }
 satisfy :: (Char -> Bool) -> Parser Char
 satisfy p = Parser f
   where
-    f [] = Nothing    -- fail on the empty input
-    f (x:xs)          -- check if x satisfies the predicate
-                        -- if so, return x along with the remainder
-                        -- of the input (that is, xs)
-        | p x       = Just (x, xs)
-        | otherwise = Nothing  -- otherwise, fail
+    f [] = Nothing -- fail on the empty input
+    f (x : xs) -- check if x satisfies the predicate
+    -- if so, return x along with the remainder
+    -- of the input (that is, xs)
+      | p x = Just (x, xs)
+      | otherwise = Nothing -- otherwise, fail
 
 -- Using satisfy, we can define the parser 'char c' which expects to
 -- see exactly the character c, and fails otherwise.
@@ -50,9 +49,10 @@ posInt :: Parser Integer
 posInt = Parser f
   where
     f xs
-      | null ns   = Nothing
+      | null ns = Nothing
       | otherwise = Just (read ns, rest)
-      where (ns, rest) = span isDigit xs
+      where
+        (ns, rest) = span isDigit xs
 
 ------------------------------------------------------------
 -- Your code goes below here
@@ -67,14 +67,68 @@ second f x = (fst x, f . snd $ x)
 
 instance Functor Parser where
   fmap f x = Parser $ fmap (first f) . runParser x
-  -- fmap f x = Parser (fmap (first f) . runParser x)
-  -- fmap f x = Parser (fmap (first f) . (runParser x))
-  -- fmap f (Parser fn) = Parser (fmap (first f) . fn)
-  -- fmap f (Parser fn) = Parser (\x -> fmap (first f) . fn $ x)
-  -- fmap f (Parser fn) = Parser (\x -> (fmap (first f)) (fn x))
-  -- fmap f (Parser fn) = Parser (\x -> fmap (first f) (fn x))
 
+-- fmap f x = Parser (fmap (first f) . runParser x)
+-- fmap f x = Parser (fmap (first f) . (runParser x))
+-- fmap f (Parser fn) = Parser (fmap (first f) . fn)
+-- fmap f (Parser fn) = Parser (\x -> fmap (first f) . fn $ x)
+-- fmap f (Parser fn) = Parser (\x -> (fmap (first f)) (fn x))
+-- fmap f (Parser fn) = Parser (\x -> fmap (first f) (fn x))
+
+-- Exercise 2
 instance Applicative Parser where
   pure x = Parser $ \y -> Just (x, y)
-  -- (<*>) (Parser fn1) (Parser fn2) = Parser $ (\x -> (fn1 . fn2 . pure) x)
+  (<*>) (Parser fn1) (Parser fn2) = Parser fn'
+    where
+      fn' = \str -> case (fn1 str) of
+        Nothing -> Nothing
+        Just (p, str') -> case (fn2 str') of
+          Nothing -> Nothing
+          Just (q, r) -> Just (p q, r)
 
+type Name = String
+
+data Employee = Emp {name :: Name, phone :: String}
+  deriving (Show)
+
+parseName :: Parser Name
+parseName = Parser f
+  where
+    f xs
+      | null ns = Nothing
+      | otherwise = Just (read ns, rest)
+      where
+        (ns, rest) = span isAlpha xs
+
+parsePhone :: Parser String
+parsePhone = Parser f
+  where
+    f xs
+      | null ns = Nothing
+      | otherwise = Just (read ns, rest)
+      where
+        (ns, rest) = span isAlpha xs
+
+parseEmployee :: Parser Employee
+parseEmployee = Emp <$> parseName <*> parsePhone
+
+-- Exercise 3
+abParser :: Parser (Char, Char)
+abParser = (fmap (,) (char 'a')) <*> (char 'b')
+
+abParser_ :: Parser ()
+abParser_ = fmap (const ()) abParser
+
+intPair :: Parser [Integer]
+intPair = (\x _ y -> [x, y]) <$> posInt <*> char ' ' <*> posInt
+
+-- class Applicative f => Alternative f where
+--   empty :: f a
+--   (<|>) :: f a -> f a -> f a
+
+instance Alternative Parser where
+  empty = Parser $ \_ -> Nothing
+  (<|>) p1 p2 = Parser $ \x -> runParser p1 x <|> runParser p2 x
+
+intOrUppercase :: Parser ()
+intOrUppercase = (fmap (const ()) posInt) <|> (fmap (const ()) (satisfy isUpper))
