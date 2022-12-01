@@ -78,9 +78,11 @@ pair = liftA2 (,)
 -- pair fa fb = (,) <$> fa <*> fb
 -- pair fa fb = (\x y -> (x, y)) <$> fa <*> fb
 
--- (*>) :: Applicative f => f a -> f b -> f b
+(*>) :: Applicative f => f a -> f b -> f b
+(*>) = flip const
 
--- mapA :: Applicative f => (a -> f b) -> ([a] -> f [b])
+mapA :: Applicative f => (a -> f b) -> ([a] -> f [b])
+mapA = traverse -- ???
 
 sequenceA :: Applicative f => [f a] -> f [a]
 sequenceA = traverse id
