@@ -34,11 +34,11 @@ char c = satisfy (== c)
 
 {- For example:
 
-*Parser> runParser (satisfy isUpper) "ABC"
+\*Parser> runParser (satisfy isUpper) "ABC"
 Just ('A',"BC")
-*Parser> runParser (satisfy isUpper) "abc"
+\*Parser> runParser (satisfy isUpper) "abc"
 Nothing
-*Parser> runParser (char 'x') "xyz"
+\*Parser> runParser (char 'x') "xyz"
 Just ('x',"yz")
 
 -}
@@ -68,6 +68,7 @@ second f x = (fst x, f . snd $ x)
 instance Functor Parser where
   fmap f x = Parser $ fmap (first f) . runParser x
 
+-- Belows are equivalent
 -- fmap f x = Parser (fmap (first f) . runParser x)
 -- fmap f x = Parser (fmap (first f) . (runParser x))
 -- fmap f (Parser fn) = Parser (fmap (first f) . fn)
@@ -78,13 +79,30 @@ instance Functor Parser where
 -- Exercise 2
 instance Applicative Parser where
   pure x = Parser $ \y -> Just (x, y)
-  (<*>) (Parser fn1) (Parser fn2) = Parser fn'
+  (<*>) p1 p2 = Parser fn'
     where
-      fn' = \str -> case (fn1 str) of
-        Nothing -> Nothing
-        Just (p, str') -> case (fn2 str') of
-          Nothing -> Nothing
-          Just (q, r) -> Just (p q, r)
+      fn' = \str -> runParser p1 str >>= fn''
+      fn'' = \(p, str') -> runParser (fmap p p2) str'
+
+-- (<*>) (Parser fn1) p2 = Parser fn'
+--   where
+--     fn' = \str -> case fn1 str of
+--       Nothing -> Nothing
+--       Just (p', str') -> runParser (fmap p' p2) $ str'
+
+-- (<*>) (Parser fn1) (Parser fn2) = Parser fn'
+--   where
+--     fn' = \str -> case fn1 str of
+--       Nothing -> Nothing
+--       Just (p', str') -> fmap (first p') . fn2 $ str'
+
+-- (<*>) (Parser fn1) (Parser fn2) = Parser fn'
+--   where
+--     fn' = \str -> case (fn1 str) of
+--       Nothing -> Nothing
+--       Just (p', str') -> case (fn2 str') of
+--         Nothing -> Nothing
+--         Just (q, r) -> Just (p' q, r)
 
 type Name = String
 
@@ -107,7 +125,7 @@ parsePhone = Parser f
       | null ns = Nothing
       | otherwise = Just (read ns, rest)
       where
-        (ns, rest) = span isAlpha xs
+        (ns, rest) = span isDigit xs
 
 parseEmployee :: Parser Employee
 parseEmployee = Emp <$> parseName <*> parsePhone
@@ -115,6 +133,7 @@ parseEmployee = Emp <$> parseName <*> parsePhone
 -- Exercise 3
 abParser :: Parser (Char, Char)
 abParser = (fmap (,) (char 'a')) <*> (char 'b')
+-- abParser = (,) <$> (char 'a') <*> (char 'b')
 
 abParser_ :: Parser ()
 abParser_ = fmap (const ()) abParser
@@ -122,6 +141,7 @@ abParser_ = fmap (const ()) abParser
 intPair :: Parser [Integer]
 intPair = (\x _ y -> [x, y]) <$> posInt <*> char ' ' <*> posInt
 
+-- Exercise 4
 -- class Applicative f => Alternative f where
 --   empty :: f a
 --   (<|>) :: f a -> f a -> f a
@@ -130,5 +150,6 @@ instance Alternative Parser where
   empty = Parser $ \_ -> Nothing
   (<|>) p1 p2 = Parser $ \x -> runParser p1 x <|> runParser p2 x
 
+-- Exercise 5
 intOrUppercase :: Parser ()
 intOrUppercase = (fmap (const ()) posInt) <|> (fmap (const ()) (satisfy isUpper))
