@@ -75,17 +75,28 @@ ex01 = getEmp r
 pair :: Applicative f => f a -> f b -> f (a, b)
 pair = liftA2 (,)
 
+-- pair fa fb = pure (,) <*> fa <*> fb
 -- pair fa fb = (,) <$> fa <*> fb
 -- pair fa fb = (\x y -> (x, y)) <$> fa <*> fb
 
 (*>) :: Applicative f => f a -> f b -> f b
-(*>) = flip const
+(*>) = liftA2 . const $ id
 
-mapA :: Applicative f => (a -> f b) -> ([a] -> f [b])
-mapA = traverse -- ???
+-- (*>) = liftA2 (const id)
+-- (*>) fa fb = (const id) <$> fa <*> fb
+
+mapA :: Applicative f => (a -> f b) -> [a] -> f [b]
+mapA f = foldr (liftA2 (:) . f) $ pure []
+
+-- mapA f = (liftA2 (:) . f) `foldr` (pure [])
+-- mapA f = (`foldr` (pure [])) (liftA2 (:) . f)
+-- mapA f = (`foldr` (pure [])) . (liftA2 (:) .) $ f
+-- mapA = (`foldr` (pure [])) . (liftA2 (:) .) -- 이게...하스켈?
 
 sequenceA :: Applicative f => [f a] -> f [a]
-sequenceA = traverse id
+sequenceA = foldr (liftA2 (:)) $ pure []
 
 replicateA :: Applicative f => Int -> f a -> f [a]
-replicateA n = Week11.sequenceA . replicate n
+replicateA = liftA . replicate
+
+-- replicateA n = liftA (replicate n)
