@@ -60,10 +60,14 @@ posInt = Parser f
 
 -- Exercise 1
 first :: (a -> b) -> (a, c) -> (b, c)
-first f x = (f . fst $ x, snd x)
+first f = (,) <$> (f . fst) <*> snd
+
+-- first f x = (f . fst $ x, snd x)
 
 second :: (a -> b) -> (c, a) -> (c, b)
-second f x = (fst x, f . snd $ x)
+second f = (,) <$> fst <*> (f . snd)
+
+-- second f x = (fst x, f . snd $ x)
 
 instance Functor Parser where
   fmap f x = Parser $ fmap (first f) . runParser x
@@ -133,6 +137,7 @@ parseEmployee = Emp <$> parseName <*> parsePhone
 -- Exercise 3
 abParser :: Parser (Char, Char)
 abParser = (fmap (,) (char 'a')) <*> (char 'b')
+
 -- abParser = (,) <$> (char 'a') <*> (char 'b')
 
 abParser_ :: Parser ()
@@ -147,8 +152,11 @@ intPair = (\x _ y -> [x, y]) <$> posInt <*> char ' ' <*> posInt
 --   (<|>) :: f a -> f a -> f a
 
 instance Alternative Parser where
-  empty = Parser $ \_ -> Nothing
-  (<|>) p1 p2 = Parser $ \x -> runParser p1 x <|> runParser p2 x
+  empty = Parser . const $ Nothing
+  (<|>) (Parser p1) (Parser p2) = Parser $ liftA2 (<|>) p1 p2
+
+-- empty = Parser $ \_ -> Nothing
+-- (<|>) p1 p2 = Parser $ \x -> runParser p1 x <|> runParser p2 x
 
 -- Exercise 5
 intOrUppercase :: Parser ()
