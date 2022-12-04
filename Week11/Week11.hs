@@ -100,3 +100,4 @@ replicateA :: Applicative f => Int -> f a -> f [a]
 replicateA = liftA . replicate
 
 -- replicateA n = liftA (replicate n)
+-- replicateA n = liftA . replicate $ n
