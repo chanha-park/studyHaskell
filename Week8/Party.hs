@@ -2,9 +2,9 @@
 
 module Party where
 
-import Employee
-import Data.Tree
 import Data.List
+import Data.Tree
+import Employee
 
 -- Exercise 1
 glCons :: Employee -> GuestList -> GuestList
@@ -40,9 +40,11 @@ maxFun = uncurry moreFun . treeFold nextLevel
 
 -- Exercise 5
 main :: IO ()
-main = readFile "company.txt" >>= \content -> putStrLn . showGL . maxFun . read $ content
+main = readFile "company.txt" >>= putStrLn . showGL . maxFun . read
 
+-- main = readFile "company.txt" >>= \content -> putStrLn . showGL . maxFun . read $ content
 -- main = readFile "company.txt" >>= \content -> putStrLn . showGL . maxFun . reify . read $ content
+
 -- reify :: Tree Employee -> Tree Employee
 -- reify = id
 
