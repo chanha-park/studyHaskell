@@ -3,6 +3,7 @@
 module Risk where
 
 import Control.Monad.Random
+import Data.List
 
 ------------------------------------------------------------
 -- Die values
@@ -35,10 +36,21 @@ battle (Battlefield x y) =
     True -> return (Battlefield x (y - 1))
     False -> return (Battlefield (x - 1) y)
 
-throw :: Int -> Rand StdGen Int
-throw n = unDV <$> ((fmap maximum) . (replicateM n) $ die)
+rsort :: Ord a => [a] -> [a]
+rsort = sortBy . flip $ compare
 
-isAttackersWin x y = (>) <$> throw (min 3 (x - 1)) <*> throw y
+-- throw n = unDV <$> ((fmap maximum) . (replicateM n) $ die)
+throw :: Int -> Rand StdGen [DieValue]
+throw n = rsort <$> replicateM n die
+
+throwAttackers :: Battlefield -> Rand StdGen [DieValue]
+throwAttackers = throw . (min 3) . (+ (-1)) . attackers
+
+throwDefenders :: Battlefield -> Rand StdGen [DieValue]
+throwDefenders = throw . (min 2) . defenders
+
+isAttackersWin :: Int -> Int -> Rand StdGen Bool
+isAttackersWin x y = (>) <$> throw (min 3 (x - 1)) <*> throw (min 2 y)
 
 -- Exercise 3
 invade :: Battlefield -> Rand StdGen Battlefield
