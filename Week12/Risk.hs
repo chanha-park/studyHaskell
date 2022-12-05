@@ -27,54 +27,65 @@ die = getRandom
 type Army = Int
 
 data Battlefield = Battlefield {attackers :: Army, defenders :: Army}
+  deriving (Show)
 
 battle :: Battlefield -> Rand StdGen Battlefield
-battle (Battlefield x y) = pure (Battlefield x' y')
-  where
-    (x', y') = fight (x, y)
--- battle (Battlefield x y) = throw x >>= \xs ->
---     throw y >>= \ys ->
---     (unDV . (evalRandIO . (fmap maximum xs))) >>= \valueX ->
---     unDV <$> (evalRandIO . (fmap maximum) $ ys) >>= \valueY ->
---     return (Battlefield (fst . fight $ (valueX, valueY)) (snd . fight $ (valueX, valueY)))
+battle (Battlefield x y) =
+  isAttackersWin x y >>= \result -> case result of
+    True -> return (Battlefield x (y - 1))
+    False -> return (Battlefield (x - 1) y)
 
-fight :: (Army, Army) -> (Army, Army)
-fight (x, y)
-  | x > y = (x, y - 1)
-  | otherwise = (x - 1, y)
+throw :: Int -> Rand StdGen Int
+throw n = unDV <$> ((fmap maximum) . (replicateM n) $ die)
 
---   where
---     valueX <- evalRandIO . (fmap maximum) . (replicateM x) $ die
---     valueX <- evalRandIO . (fmap maximum) . (replicateM x) $ die
-
-throw n = unDV <$> (evalRandIO . (fmap maximum) . (replicateM n) $ die)
--- throw :: Int -> Rand StdGen [DieValue]
--- throw n = replicateM n die
+isAttackersWin x y = (>) <$> throw (min 3 (x - 1)) <*> throw y
 
 -- Exercise 3
 invade :: Battlefield -> Rand StdGen Battlefield
 invade x
-  | attackers x < 2 = pure x
+  | attackers x < 2 || defenders x < 1 = pure x
   | otherwise = battle x >>= invade
 
 -- Exercise 4
 successProb :: Battlefield -> Rand StdGen Double
-successProb = undefined
+successProb x =
+  simulate x >>= \success -> return (fromIntegral success / fromIntegral numOfInvasion)
+
+isInvasionSuccess :: Battlefield -> Rand StdGen Bool
+isInvasionSuccess x =
+  invade x >>= \result -> case result of
+    Battlefield _ 0 -> return (True)
+    _ -> return (False)
+
+isSuccess :: Battlefield -> Bool
+isSuccess (Battlefield _ 0) = True
+isSuccess _ = False
 
 numOfInvasion :: Int
 numOfInvasion = 1000
 
+simulate :: Battlefield -> Rand StdGen Int
+simulate x = (length . filter (&& True) <$> (replicateM numOfInvasion . isInvasionSuccess $ x))
+
+testBattleField :: Battlefield
+testBattleField = Battlefield 5 4
+
+-- b = sequenceA . replicateM 10 invade
+-- c = b testBattleField
+-- how can i get result from c???
+
+main :: IO ()
+main =
+  (evalRandIO . successProb $ testBattleField) >>= putStrLn . show
+
+-- same result
+-- main = do
+--   result <- evalRandIO . successProb $ testBattleField
+--   putStrLn . show $ result
+--   return ()
+
+-- evalRandIO :: Rand StdGen a -> IO a
+
 -- Exercise 5
 exactSuccessProb :: Battlefield -> Double
 exactSuccessProb = undefined
-
--- main :: IO ()
--- main = do
---     let a = replicateM 3 die
---     let b = fmap maximum a
---     let c = evalRandIO b
---     d <- c
---     putStrLn (show d)
---     return ()
-
--- evalRandIO :: Rand StdGen a -> IO a
