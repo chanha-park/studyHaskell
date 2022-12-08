@@ -47,3 +47,6 @@ https://wiki.haskell.org/Haskell
  
  http://learn.hfm.io/
  
+ https://www.schoolofhaskell.com/
+ 
+ https://haskellbook.com/
