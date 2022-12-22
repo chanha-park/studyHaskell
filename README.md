@@ -2,24 +2,14 @@
 
 Simple haskell practice.
 
-Based on cis 194 course(spring 13) from upenn
+# Plan
 
-https://www.cis.upenn.edu/~cis1940/spring13/
-
-I also referred to the solutions by bschwb & OctaviPascual
-
-https://github.com/bschwb/cis194-solutions, https://github.com/OctaviPascual/cis194-IntroductionToHaskell
+ - [x] [cis194(spring13)](./cis194spring13) - done...?
+ - [ ] LYAH
+ - [ ] RealWorldHaskell
 
 
-# References:
-
-https://hoogle.haskell.org/
-
-https://wiki.haskell.org/Haskell
-
-
-
- # Other Resources:
+ # Other Resources
 
  http://learnyouahaskell.com/chapters
  
@@ -35,7 +25,7 @@ https://wiki.haskell.org/Haskell
   
  https://www.yesodweb.com/book
 
----
+-
  
  http://ozark.hendrix.edu/~yorgey/360/f16/
  
@@ -50,3 +40,9 @@ https://wiki.haskell.org/Haskell
  https://www.schoolofhaskell.com/
  
  https://haskellbook.com/
+
+# References
+
+https://hoogle.haskell.org/
+
+https://wiki.haskell.org/Haskell
