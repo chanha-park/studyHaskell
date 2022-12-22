@@ -25,7 +25,8 @@ Simple haskell practice.
   
  https://www.yesodweb.com/book
 
--
+
+
  
  http://ozark.hendrix.edu/~yorgey/360/f16/
  
