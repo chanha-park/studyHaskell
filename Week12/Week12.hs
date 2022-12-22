@@ -16,9 +16,9 @@ instance Applicative Parser where
   pure x = Parser $ \y -> Just (x, y)
   (<*>) (Parser fn1) p2 = Parser fn'
     where
-      fn' = \str -> case fn1 str of
+      fn' str = case fn1 str of
         Nothing -> Nothing
-        Just (p', str') -> runParser (fmap p' p2) $ str'
+        Just (p', str') -> runParser (fmap p' p2) str'
 
 instance Alternative Parser where
   empty = Parser . const $ Nothing
@@ -51,13 +51,13 @@ halve n
   | otherwise = Nothing
 
 ex01 :: Maybe Int
-ex01 = return 7 >>= check >>= halve
+ex01 = check 7 >>= halve
 
 ex02 :: Maybe Int
-ex02 = return 12 >>= check >>= halve
+ex02 = check 12 >>= halve
 
 ex03 :: Maybe Int
-ex03 = return 12 >>= halve >>= check
+ex03 = halve 12 >>= check
 
 addOneOrTwo :: Int -> [Int]
 addOneOrTwo x = [x + 1, x + 2]

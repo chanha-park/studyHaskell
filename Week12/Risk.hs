@@ -1,4 +1,6 @@
+{-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Risk where
 
@@ -32,7 +34,7 @@ data Battlefield = Battlefield {attackers :: Army, defenders :: Army}
 
 battle :: Battlefield -> Rand StdGen Battlefield
 battle (Battlefield x y) =
-  isAttackersWin x y >>= \result -> case result of
+  isAttackersWin x y >>= \case
     True -> return (Battlefield x (y - 1))
     False -> return (Battlefield (x - 1) y)
 
@@ -44,10 +46,10 @@ throw :: Int -> Rand StdGen [DieValue]
 throw n = rsort <$> replicateM n die
 
 throwAttackers :: Battlefield -> Rand StdGen [DieValue]
-throwAttackers = throw . (min 3) . (+ (-1)) . attackers
+throwAttackers = throw . min 3 . (+ (-1)) . attackers
 
 throwDefenders :: Battlefield -> Rand StdGen [DieValue]
-throwDefenders = throw . (min 2) . defenders
+throwDefenders = throw . min 2 . defenders
 
 isAttackersWin :: Int -> Int -> Rand StdGen Bool
 isAttackersWin x y = (>) <$> throw (min 3 (x - 1)) <*> throw (min 2 y)
@@ -65,9 +67,9 @@ successProb x =
 
 isInvasionSuccess :: Battlefield -> Rand StdGen Bool
 isInvasionSuccess x =
-  invade x >>= \result -> case result of
-    Battlefield _ 0 -> return (True)
-    _ -> return (False)
+  invade x >>= \case
+    Battlefield _ 0 -> return True
+    _ -> return False
 
 isSuccess :: Battlefield -> Bool
 isSuccess (Battlefield _ 0) = True
@@ -77,7 +79,7 @@ numOfInvasion :: Int
 numOfInvasion = 1000
 
 simulate :: Battlefield -> Rand StdGen Int
-simulate x = (length . filter (&& True) <$> (replicateM numOfInvasion . isInvasionSuccess $ x))
+simulate x = length . filter (&& True) <$> (replicateM numOfInvasion . isInvasionSuccess $ x)
 
 testBattleField :: Battlefield
 testBattleField = Battlefield 5 4
@@ -88,7 +90,7 @@ testBattleField = Battlefield 5 4
 
 main :: IO ()
 main =
-  (evalRandIO . successProb $ testBattleField) >>= putStrLn . show
+  (evalRandIO . successProb $ testBattleField) >>= print
 
 -- same result
 -- main = do
