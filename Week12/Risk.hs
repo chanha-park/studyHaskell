@@ -1,6 +1,6 @@
-{-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 
 module Risk where
 
@@ -32,11 +32,22 @@ type Army = Int
 data Battlefield = Battlefield {attackers :: Army, defenders :: Army}
   deriving (Show)
 
+compareRoll :: [DieValue] -> [DieValue] -> (Int -> Int, Int -> Int)
+compareRoll [] _ = ((+) 0, (+) 0)
+compareRoll _ [] = ((+) 0, (+) 0)
+compareRoll (x : xs) (y : ys)
+  | x > y = ((+) 0 . f, (+) (-1) . g)
+  | otherwise = ((+) (-1) . f, (+) 0 . g)
+  where
+    (f, g) = compareRoll xs ys
+
+-- How can i change it to >>= form?
 battle :: Battlefield -> Rand StdGen Battlefield
-battle (Battlefield x y) =
-  isAttackersWin x y >>= \case
-    True -> return (Battlefield x (y - 1))
-    False -> return (Battlefield (x - 1) y)
+battle (Battlefield x y) = do
+  rollAttackers <- throwAttackers x
+  rollDefenders <- throwDefenders y
+  let (c, d) = compareRoll rollAttackers rollDefenders
+  return (Battlefield (c x) (d y))
 
 rsort :: Ord a => [a] -> [a]
 rsort = sortBy . flip $ compare
@@ -45,14 +56,11 @@ rsort = sortBy . flip $ compare
 throw :: Int -> Rand StdGen [DieValue]
 throw n = rsort <$> replicateM n die
 
-throwAttackers :: Battlefield -> Rand StdGen [DieValue]
-throwAttackers = throw . min 3 . (+ (-1)) . attackers
+throwAttackers :: Int -> Rand StdGen [DieValue]
+throwAttackers = throw . min 3 . (+ (-1))
 
-throwDefenders :: Battlefield -> Rand StdGen [DieValue]
-throwDefenders = throw . min 2 . defenders
-
-isAttackersWin :: Int -> Int -> Rand StdGen Bool
-isAttackersWin x y = (>) <$> throw (min 3 (x - 1)) <*> throw (min 2 y)
+throwDefenders :: Int -> Rand StdGen [DieValue]
+throwDefenders = throw . min 2
 
 -- Exercise 3
 invade :: Battlefield -> Rand StdGen Battlefield
