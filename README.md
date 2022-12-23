@@ -5,14 +5,12 @@ Simple haskell practice.
 # Plan
 
  - [x] [cis194(spring13)](./cis194spring13) - done...?
- - [ ] LYAH
+ - [ ] [LYAH](./LYAH)
  - [ ] RealWorldHaskell
 
 
  # Other Resources
 
- http://learnyouahaskell.com/chapters
- 
  https://www.seas.upenn.edu/~cis1940/fall16/
  
  https://lhbg-book.link/
