@@ -6,14 +6,13 @@ Simple haskell practice.
 
  - [x] [cis194(spring13)](./cis194spring13) - done...?
  - [ ] [LYAH](./LYAH)
+ - [ ] [LHBG](./LHBG)
  - [ ] RealWorldHaskell
 
 
  # Other Resources
 
  https://www.seas.upenn.edu/~cis1940/fall16/
- 
- https://lhbg-book.link/
  
  http://book.realworldhaskell.org/read/
  
