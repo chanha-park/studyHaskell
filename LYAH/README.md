@@ -1,3 +1,5 @@
-# Learn Your Haskell for Great Good
+# Learn You a Haskell for Great Good
 
-http://learnyouahaskell.com/chapters
+My Haskell practice based on LYAH
+
+Course Link: http://learnyouahaskell.com/chapters
