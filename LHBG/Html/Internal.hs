@@ -9,7 +9,6 @@ module Html.Internal where
 newtype Html = Html String
 
 newtype Structure = Structure String
-    deriving (Show)
 
 type Title = String
 
@@ -42,8 +41,11 @@ ol_ = Structure . el "ol" . concatMap (el "li" . getStructureString)
 code_ :: String -> Structure
 code_ = Structure . el "pre" . escape
 
-append_ :: Structure -> Structure -> Structure
-append_ (Structure x) (Structure y) = Structure (x <> y)
+instance Semigroup Structure where
+    (<>) x y = Structure (getStructureString x <> getStructureString y)
+
+-- append_ :: Structure -> Structure -> Structure
+-- append_ (Structure x) (Structure y) = Structure (x <> y)
 
 -- render
 

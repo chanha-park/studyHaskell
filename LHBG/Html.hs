@@ -12,7 +12,6 @@ module Html (
     ul_,
     ol_,
     code_,
-    append_,
     render,
 ) where
 

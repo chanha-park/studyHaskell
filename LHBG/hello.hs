@@ -10,6 +10,6 @@ myhtml =
     html_
         "my title"
         ( h1_ "my heading"
-            `append_` p_ "paragraph 1"
-            `append_` p_ "paragraph 2"
+            <> p_ "paragraph 1"
+            <> p_ "paragraph 2"
         )
