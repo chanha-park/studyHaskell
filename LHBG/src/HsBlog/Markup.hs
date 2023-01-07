@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall  -Wextra -Werror #-}
 
-module Markup (
+module HsBlog.Markup (
     Document,
     Structure (..),
     parse,

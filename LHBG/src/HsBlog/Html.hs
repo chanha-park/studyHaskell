@@ -2,7 +2,7 @@
 
 -- Html.hs
 
-module Html (
+module HsBlog.Html (
     Html,
     Title,
     Structure,
@@ -15,4 +15,4 @@ module Html (
     render,
 ) where
 
-import Html.Internal
+import HsBlog.Html.Internal

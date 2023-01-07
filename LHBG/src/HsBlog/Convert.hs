@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 
-module Convert (
+module HsBlog.Convert (
     process,
 ) where
 
-import Html qualified
-import Markup qualified
+import qualified HsBlog.Html as Html
+import qualified HsBlog.Markup as Markup
 
 convert :: Html.Title -> Markup.Document -> Html.Html
 convert x = Html.html_ x . foldMap convertStructure

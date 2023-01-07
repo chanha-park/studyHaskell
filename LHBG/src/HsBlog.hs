@@ -1,8 +1,18 @@
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall  -Wextra -Werror #-}
 
+module HsBlog (
+    main,
+    process,
+)
+where
+
+import HsBlog.Convert (process)
+
+-- import qualified HsBlog.Html as Html
+-- import qualified HsBlog.Markup as Markup
+
 import Control.Monad (when)
-import Convert (process)
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
 
