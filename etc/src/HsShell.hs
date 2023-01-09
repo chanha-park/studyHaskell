@@ -1,7 +1,16 @@
 {-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 
+module HsShell (
+    main,
+    myLoop,
+) where
+
 import System.Exit
 import System.IO
+
+import HsShell.Execute (execute)
+import HsShell.Expand (expand)
+import HsShell.Parse (parse)
 
 -- import System.Process
 
@@ -15,14 +24,8 @@ myLoop =
         >>= ( \eof ->
                 if eof
                     then exitWith (ExitFailure 1)
-                    else getLine >>= (execute . parse) >> myLoop
+                    else getLine >>= (execute . expand . parse) >> myLoop
             )
-
-parse :: String -> String
-parse = id
-
-execute :: String -> IO ()
-execute = putStrLn . (++ "$")
 
 printPrompt :: IO ()
 printPrompt = putStr "Input $ "
