@@ -106,7 +106,7 @@ executable hs-blog-gen
     -- Directories containing source files.
     hs-source-dirs:   app
 
-	ghc-options: -O
+    ghc-options: -O
 
 test-suite hs-blog-test
     -- Import common common-settings flags.
