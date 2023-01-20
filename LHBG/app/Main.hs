@@ -13,8 +13,8 @@ main :: IO ()
 main =
     OptParse.parse
         >>= ( \case
-                OptParse.ConvertDir input output -> HsBlog.convertDirectory input output
-                OptParse.ConvertSingle input output -> do
+                OptParse.ConvertDir input output _ -> HsBlog.convertDirectory input output
+                OptParse.ConvertSingle input output replaceFlag -> do
                     (title, inputHandle) <- case input of
                         OptParse.Stdin -> pure ("", stdin)
                         OptParse.InputFile path -> (,) path <$> openFile path ReadMode
@@ -24,8 +24,12 @@ main =
                         OptParse.OutputFile path ->
                             doesFileExist path
                                 >>= ( \case
-                                        True -> confirm "are you sure? (y/n)"
                                         False -> pure True
+                                        True ->
+                                            ( if replaceFlag
+                                                then pure True
+                                                else confirm "are you sure? (y/n)"
+                                            )
                                     )
                                 >>= \case
                                     True -> openFile path WriteMode

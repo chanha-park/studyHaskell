@@ -4,6 +4,7 @@ module OptParse (
     Options (..),
     SingleInput (..),
     SingleOutput (..),
+    ReplaceFlag,
     parse,
 ) where
 
@@ -11,8 +12,8 @@ import Data.Maybe (fromMaybe)
 import Options.Applicative
 
 data Options
-    = ConvertSingle SingleInput SingleOutput
-    | ConvertDir FilePath FilePath
+    = ConvertSingle SingleInput SingleOutput ReplaceFlag
+    | ConvertDir FilePath FilePath ReplaceFlag
     deriving (Show)
 
 data SingleInput
@@ -24,6 +25,8 @@ data SingleOutput
     = Stdout
     | OutputFile FilePath
     deriving (Show)
+
+type ReplaceFlag = Bool
 
 -- inp :: Parser FilePath
 -- inp =
@@ -71,8 +74,11 @@ pSingleInput = fromMaybe Stdin <$> optional pInputFile
 pSingleOutput :: Parser SingleOutput
 pSingleOutput = fromMaybe Stdout <$> optional pOutputFile
 
+pReplaceFile :: Parser ReplaceFlag
+pReplaceFile = switch (long "replace" <> short 'r' <> help "Replace existing file")
+
 pConvertSingle :: Parser Options
-pConvertSingle = ConvertSingle <$> pSingleInput <*> pSingleOutput
+pConvertSingle = ConvertSingle <$> pSingleInput <*> pSingleOutput <*> pReplaceFile
 
 pInputDir :: Parser FilePath
 pInputDir =
@@ -93,7 +99,7 @@ pOutputDir =
         )
 
 pConvertDir :: Parser Options
-pConvertDir = ConvertDir <$> pInputDir <*> pOutputDir
+pConvertDir = ConvertDir <$> pInputDir <*> pOutputDir <*> pReplaceFile
 
 -- subparser :: Mod CommandFields a -> Parser a
 -- subparser = undefined
