@@ -2,6 +2,7 @@
 
 module HsBlog.Convert (
     process,
+    buildIndex,
 ) where
 
 import qualified HsBlog.Html as Html
