@@ -12,6 +12,8 @@ newtype Html = Html String
 
 newtype Structure = Structure String
 
+newtype Content = Content String
+
 type Title = String
 
 -- EDSL
@@ -28,14 +30,13 @@ html_ x y =
             )
         )
 
-p_ :: String -> Structure
-p_ = Structure . el "p" . escape
+-- Structure {{{
 
--- h1_ :: String -> Structure
--- h1_ = Structure . el "h1" . escape
+p_ :: Content -> Structure
+p_ = Structure . el "p" . getContentString
 
-h_ :: Natural -> String -> Structure
-h_ n = Structure . el ('h' : show n) . escape
+h_ :: Natural -> Content -> Structure
+h_ n = Structure . el ('h' : show n) . getContentString
 
 ul_ :: [Structure] -> Structure
 ul_ = Structure . el "ul" . concatMap (el "li" . getStructureString)
@@ -52,11 +53,39 @@ instance Semigroup Structure where
 instance Monoid Structure where
     mempty = Structure ""
 
--- append_ :: Structure -> Structure -> Structure
--- append_ (Structure x) (Structure y) = Structure (x <> y)
+-- }}}
 
--- empty_ :: Structure
--- empty_ = Structure ""
+-- Content {{{
+
+txt_ :: String -> Content
+txt_ = Content . escape
+
+link_ :: FilePath -> Content -> Content
+link_ path content =
+    Content $
+        elAttr
+            "a"
+            ("href=\"" <> escape path <> "\"")
+            (getContentString content)
+
+img_ :: FilePath -> Content
+img_ path =
+    Content $
+        "<img src=\"" <> escape path <> "\">"
+
+b_ :: Content -> Content
+b_ = Content . el "b" . getContentString
+
+i_ :: Content -> Content
+i_ = Content . el "i" . getContentString
+
+instance Semigroup Content where
+    (<>) x y = Content (getContentString x <> getContentString y)
+
+instance Monoid Content where
+    mempty = Content ""
+
+-- }}}
 
 -- render
 
@@ -68,8 +97,15 @@ render (Html x) = x
 el :: String -> String -> String
 el x y = "<" <> x <> ">" <> y <> "</" <> x <> ">"
 
+elAttr :: String -> String -> String -> String
+elAttr tag attr content =
+    "<" <> tag <> " " <> attr <> ">" <> content <> "</" <> tag <> ">"
+
 getStructureString :: Structure -> String
 getStructureString (Structure x) = x
+
+getContentString :: Content -> String
+getContentString (Content x) = x
 
 escape :: String -> String
 escape =
