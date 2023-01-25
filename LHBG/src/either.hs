@@ -25,7 +25,6 @@ bindExceptT mx f =
 
 -- lift :: m a -> ExceptT e m a
 
-
 tokenize :: String -> Either Error [Token]
 tokenize = undefined
 
@@ -40,3 +39,9 @@ parseToken string = tokenize string >>= parse
 
 compile :: String -> Either Error TypedAST
 compile string = tokenize string >>= parse >>= typecheck
+
+readFile :: FilePath -> ExceptT IOError IO String
+readFile = undefined
+
+writeFile :: FilePath -> String -> ExceptT IOError IO ()
+writeFile = undefined
