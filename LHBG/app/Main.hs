@@ -1,8 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
-{-# OPTIONS_GHC -Wall  -Wextra -Werror #-}
+{-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 
 module Main where
 
+-- import Control.Exception
 import qualified HsBlog (convertDirectory, convertSingle)
 import qualified OptParse
 import System.Directory
@@ -13,31 +14,29 @@ main :: IO ()
 main =
     OptParse.parse
         >>= ( \case
-                OptParse.ConvertDir input output _ -> HsBlog.convertDirectory input output
-                OptParse.ConvertSingle input output replaceFlag -> do
-                    (title, inputHandle) <- case input of
-                        OptParse.Stdin -> pure ("", stdin)
-                        OptParse.InputFile path -> (,) path <$> openFile path ReadMode
+                OptParse.ConvertDir input output _ ->
+                    HsBlog.convertDirectory input output
+                OptParse.ConvertSingle input output replaceFlag ->
+                    withInputHandle ((withOutputHandle .) . HsBlog.convertSingle)
+                  where
+                    withInputHandle :: (String -> Handle -> IO a) -> IO a
+                    withInputHandle action = case input of
+                        OptParse.Stdin -> action "" stdin
+                        OptParse.InputFile path -> withFile path ReadMode (action path)
 
-                    outputHandle <- case output of
-                        OptParse.Stdout -> pure stdout
+                    withOutputHandle :: (Handle -> IO b) -> IO b
+                    withOutputHandle action = case output of
+                        OptParse.Stdout -> action stdout
                         OptParse.OutputFile path ->
                             doesFileExist path
-                                >>= ( \case
-                                        False -> pure True
-                                        True ->
-                                            ( if replaceFlag
-                                                then pure True
-                                                else confirm "are you sure? (y/n)"
-                                            )
+                                >>= ( \exist ->
+                                        if not exist || replaceFlag
+                                            then pure True
+                                            else confirm "are you sure? (y/n)"
                                     )
                                 >>= \case
-                                    True -> openFile path WriteMode
+                                    True -> withFile path WriteMode action
                                     False -> exitFailure
-
-                    HsBlog.convertSingle title inputHandle outputHandle
-                    hClose inputHandle
-                    hClose outputHandle
             )
 
 confirm :: String -> IO Bool
