@@ -72,6 +72,7 @@ library
     exposed-modules:
         HsBlog
         HsBlog.Convert
+        HsBlog.Directory
         HsBlog.Html
         HsBlog.Html.Internal
         HsBlog.Markup
@@ -86,7 +87,7 @@ library
     build-depends:
         , base
         , directory
-
+        , filepath
     -- Directories containing source files.
     hs-source-dirs:  src
 
@@ -109,6 +110,7 @@ executable hs-blog-gen
         , directory
         , hs-blog
         , optparse-applicative
+        , filepath
 
     -- Directories containing source files.
     hs-source-dirs: app
