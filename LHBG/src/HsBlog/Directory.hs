@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall -Wextra -Werror #-}
 
 module HsBlog.Directory (
@@ -10,6 +11,7 @@ import qualified HsBlog.Html as Html
 import qualified HsBlog.Markup as Markup
 
 import Control.Monad (void, when)
+import Data.Functor ((<&>))
 import Data.List (partition)
 import Data.Traversable (for)
 
@@ -31,30 +33,52 @@ import System.FilePath (
  )
 import System.IO (hPutStrLn, stderr)
 
--- WIP --
-
-checkTxtExtension :: [FilePath] -> ([FilePath], [FilePath])
-checkTxtExtension = partition ((== ".txt") . takeExtension)
-
-constructDirContents :: ([FilePath], [FilePath]) -> DirContents
-constructDirContents (xs, ys) = DirContents (splitBaseExtension xs) ys
-  where
-    splitBaseExtension :: [FilePath] -> [(FilePath, String)]
-    splitBaseExtension = map (\x -> (takeBaseName x, takeExtension x))
-
-getDirFilesAndContent :: FilePath -> IO DirContents
-getDirFilesAndContent inputDir =
-    listDirectory inputDir
-        <&> map (inputDir </>)
-        <&> checkTxtExtension
-        <&> constructDirContents
-
--- WIP --
-
 data DirContents = DirContents
     { dcFilesToProcess :: [(FilePath, String)]
     , dcFilesToCopy :: [FilePath]
     }
+
+checkTxtExtension :: [FilePath] -> ([FilePath], [FilePath])
+checkTxtExtension = partition ((== ".txt") . takeExtension)
+
+getDirFilesAndContent :: FilePath -> IO DirContents
+getDirFilesAndContent inputDir =
+    listDirectory inputDir
+        >>= ( \(xs, ys) ->
+                applyIOonTraversal readFile xs
+                    >>= filterAndReportFailures
+                    >>= ( \xs' ->
+                            pure $
+                                DirContents
+                                    { dcFilesToProcess = xs'
+                                    , dcFilesToCopy = ys
+                                    }
+                        )
+            )
+            . checkTxtExtension
+            . map (inputDir </>)
+
+applyIOonTraversal ::
+    Traversable t =>
+    (a -> IO b) ->
+    t a ->
+    IO (t (a, Either String b))
+applyIOonTraversal fn xs =
+    for
+        xs
+        ( \x ->
+            catch
+                (Right <$> fn x)
+                (\(SomeException e) -> pure . Left . displayException $ e)
+                <&> (,) x
+        )
+
+filterAndReportFailures :: [(a, Either String b)] -> IO [(a, b)]
+filterAndReportFailures = foldMap fn
+  where
+    fn :: (a, Either String b) -> IO [(a, b)]
+    fn (x, Right y) = pure [(x, y)]
+    fn (_, Left y) = hPutStrLn stderr y >> pure []
 
 buildIndex :: [(FilePath, Markup.Document)] -> Html.Html
 buildIndex files =
@@ -87,10 +111,46 @@ convertDirectory inputDir outputDir = do
     putStrLn "Done."
 
 createOutputDirectoryOrExit :: FilePath -> IO ()
-createOutputDirectoryOrExit = undefined
+createOutputDirectoryOrExit outputDir =
+    createOutputDirectory outputDir
+        >>= ( \case
+                True -> pure ()
+                False -> hPutStrLn stderr "Cancelled." >> exitFailure
+            )
+  where
+    createOutputDirectory :: FilePath -> IO Bool
+    createOutputDirectory dir =
+        doesDirectoryExist dir
+            >>= ( \case
+                    True ->
+                        confirm "already exist. override?"
+                            >>= ( \x ->
+                                    when x (removeDirectoryRecursive dir)
+                                        >> pure x
+                                )
+                    False -> pure True
+                )
+            >>= (\x -> when x (createDirectory dir) >> pure x)
+
+confirm :: String -> IO Bool
+confirm msg =
+    putStrLn msg
+        *> getLine
+        >>= \case
+            "y" -> pure True
+            "n" -> pure False
+            _ ->
+                putStrLn "Invalid response. use y or n"
+                    *> confirm msg
 
 txtsToRenderedHtml :: [(FilePath, String)] -> [(FilePath, String)]
 txtsToRenderedHtml = undefined
+
+toOutputMarkupFile :: (FilePath, String) -> (FilePath, Markup.Document)
+toOutputMarkupFile = undefined
+
+convertFile :: (FilePath, Markup.Document) -> (FilePath, Html.Html)
+convertFile = undefined
 
 copyFiles :: FilePath -> [FilePath] -> IO ()
 copyFiles = undefined
