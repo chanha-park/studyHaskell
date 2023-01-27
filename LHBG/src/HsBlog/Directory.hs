@@ -10,7 +10,7 @@ import HsBlog.Convert (convert, convertStructure)
 import qualified HsBlog.Html as Html
 import qualified HsBlog.Markup as Markup
 
-import Control.Monad (void, when)
+import Control.Monad (when)
 import Data.Functor ((<&>))
 import Data.List (partition)
 import Data.Traversable (for)
@@ -38,10 +38,18 @@ data DirContents = DirContents
     , dcFilesToCopy :: [FilePath]
     }
 
-checkTxtExtension :: [FilePath] -> ([FilePath], [FilePath])
-checkTxtExtension = partition ((== ".txt") . takeExtension)
+convertDirectory :: FilePath -> FilePath -> IO ()
+convertDirectory inputDir outputDir = do
+    DirContents filesToProcess filesToCopy <- getDirFilesAndContent inputDir
+    createOutputDirectoryOrExit outputDir
+    let
+        outputHtmls = txtsToRenderedHtml filesToProcess
+    copyFiles outputDir filesToCopy
+    writeFiles outputDir outputHtmls
+    putStrLn "Done."
 
 getDirFilesAndContent :: FilePath -> IO DirContents
+-- getDirFilesAndContent {{{
 getDirFilesAndContent inputDir =
     listDirectory inputDir
         >>= ( \(xs, ys) ->
@@ -80,37 +88,13 @@ filterAndReportFailures = foldMap fn
     fn (x, Right y) = pure [(x, y)]
     fn (_, Left y) = hPutStrLn stderr y >> pure []
 
-buildIndex :: [(FilePath, Markup.Document)] -> Html.Html
-buildIndex files =
-    Html.html_
-        "Blog"
-        ( Html.h_ 1 (Html.link_ "index.html" (Html.txt_ "Blog"))
-            <> Html.h_ 2 (Html.txt_ "Posts")
-            <> mconcat previews
-        )
-  where
-    previews =
-        map
-            ( \(file, doc) -> case doc of
-                Markup.Heading 1 heading : article ->
-                    Html.h_ 3 (Html.link_ file (Html.txt_ heading))
-                        <> foldMap convertStructure (take 3 article)
-                        <> Html.p_ (Html.link_ file (Html.txt_ "..."))
-                _ -> Html.h_ 3 (Html.link_ file (Html.txt_ file))
-            )
-            files
+checkTxtExtension :: [FilePath] -> ([FilePath], [FilePath])
+checkTxtExtension = partition ((== ".txt") . takeExtension)
 
-convertDirectory :: FilePath -> FilePath -> IO ()
-convertDirectory inputDir outputDir = do
-    DirContents filesToProcess filesToCopy <- getDirFilesAndContent inputDir
-    createOutputDirectoryOrExit outputDir
-    let
-        outputHtmls = txtsToRenderedHtml filesToProcess
-    copyFiles outputDir filesToCopy
-    writeFiles outputDir outputHtmls
-    putStrLn "Done."
+-- }}}
 
 createOutputDirectoryOrExit :: FilePath -> IO ()
+-- createOutputDirectoryOrExit {{{
 createOutputDirectoryOrExit outputDir =
     createOutputDirectory outputDir
         >>= ( \case
@@ -143,17 +127,54 @@ confirm msg =
                 putStrLn "Invalid response. use y or n"
                     *> confirm msg
 
+-- }}}
+
+buildIndex :: [(FilePath, Markup.Document)] -> Html.Html
+-- buildIndex {{{
+buildIndex files =
+    Html.html_
+        "Blog"
+        ( Html.h_ 1 (Html.link_ "index.html" (Html.txt_ "Blog"))
+            <> Html.h_ 2 (Html.txt_ "Posts")
+            <> mconcat previews
+        )
+  where
+    previews =
+        map
+            ( \(file, doc) -> case doc of
+                Markup.Heading 1 heading : article ->
+                    Html.h_ 3 (Html.link_ file (Html.txt_ heading))
+                        <> foldMap convertStructure (take 3 article)
+                        <> Html.p_ (Html.link_ file (Html.txt_ "..."))
+                _ -> Html.h_ 3 (Html.link_ file (Html.txt_ file))
+            )
+            files
+
+-- }}}
+
 txtsToRenderedHtml :: [(FilePath, String)] -> [(FilePath, String)]
-txtsToRenderedHtml = undefined
+-- txtsToRenderedHtml {{{
+txtsToRenderedHtml xs = map (fmap Html.render) (index : map convertFile txtOutputFiles)
+  where
+    txtOutputFiles = map toOutputMarkupFile xs
+    index = ("index.html", buildIndex txtOutputFiles)
 
-toOutputMarkupFile :: (FilePath, String) -> (FilePath, Markup.Document)
-toOutputMarkupFile = undefined
+    toOutputMarkupFile :: (FilePath, String) -> (FilePath, Markup.Document)
+    toOutputMarkupFile (x, y) = (takeBaseName x <.> "html", Markup.parse y)
 
-convertFile :: (FilePath, Markup.Document) -> (FilePath, Html.Html)
-convertFile = undefined
+    convertFile :: (FilePath, Markup.Document) -> (FilePath, Html.Html)
+    convertFile (x, y) = (x, HsBlog.Convert.convert x y)
 
 copyFiles :: FilePath -> [FilePath] -> IO ()
-copyFiles = undefined
+copyFiles outputDir files =
+    applyIOonTraversal copyFromTo files >>= filterAndReportFailures >> pure ()
+  where
+    copyFromTo file = copyFile file (outputDir </> takeFileName file)
 
 writeFiles :: FilePath -> [(FilePath, String)] -> IO ()
-writeFiles = undefined
+writeFiles outputDir files =
+    applyIOonTraversal writeFileContent files >>= filterAndReportFailures >> pure ()
+  where
+    writeFileContent (file, content) = writeFile (outputDir </> file) content
+
+-- }}}
